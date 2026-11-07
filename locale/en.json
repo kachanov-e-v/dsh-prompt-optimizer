@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Prompt Optimizer",
+    "description": "Rewrites a composer draft with the selected model or a local template, then writes the improved prompt back into the composer."
+  }
+}

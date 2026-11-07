@@ -1,0 +1,12 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dpo-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4F7CFF"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#dpo-bg)"/>
+  <path d="M31 14.5l4.2 10.3 10.3 4.2-10.3 4.2L31 43.5l-4.2-10.3-10.3-4.2 10.3-4.2L31 14.5z" fill="#FFFFFF"/>
+  <path d="M45.5 38.5l2.1 5.2 5.2 2.1-5.2 2.1-2.1 5.2-2.1-5.2-5.2-2.1 5.2-2.1 2.1-5.2z" fill="#FFFFFF" opacity="0.82"/>
+  <path d="M18 37.5l1.6 3.9 3.9 1.6-3.9 1.6-1.6 3.9-1.6-3.9-3.9-1.6 3.9-1.6 1.6-3.9z" fill="#FFFFFF" opacity="0.62"/>
+</svg>

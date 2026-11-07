@@ -1,0 +1,10 @@
+# Ad-hoc test scripts and build artefacts
+*.log
+/tmp/
+node_modules/
+.DS_Store
+Thumbs.db
+*.tmp
+*.cjs.bak
+test-results/
+coverage/
