@@ -1,35 +1,36 @@
 # ROADMAP
 
-Planned and possible future work for `dsh-prompt-optimizer`.
+Планы и возможные направления развития `dsh-prompt-optimizer`.
 
-## Done
+## Сделано
 
-- [x] Client-side button in `conversation.input.left`
-- [x] Local template rewrite (role / task / context / requirements / format /
-      quality)
-- [x] Host route with LLM streaming (`/dsh-prompt-optimizer/optimize`)
-- [x] LLM / Template mode switch with persistence
-- [x] Automatic fallback to template on model failure
-- [x] Restore-original-draft on second click
-- [x] ru / zh / en UI copy by language prefix
+- [x] Кнопка в `conversation.input.left`
+- [x] Локальный шаблон переписывания (роль / задача / контекст / требования /
+      формат ответа / критерии качества)
+- [x] Host-маршрут со стримингом LLM (`/dsh-prompt-optimizer/optimize`)
+- [x] Переключатель режимов LLM / Шаблон с сохранением
+- [x] Автоматический откат на шаблон при ошибке модели
+- [x] Возврат исходного черновика по повторному клику
+- [x] UI-копирайт ru / zh / en по префиксу языка
 - [x] README, AGENTS, ROADMAP, LICENSE
 
-## Next
+## Ближайшее
 
-- [ ] Add a real test harness (Node scripts under `test/`) covering `buildPrompt`
-      and the Host route with a mocked `ctx.llm`.
-- [ ] Expose plugin settings (provider/model/timeout/maxTokens) through a
-      `Config` schema instead of raw `config`.
-- [ ] Show the active model name in the tooltip while in LLM mode.
-- [ ] Add a "copy to clipboard" affordance for the generated prompt.
-- [ ] Support streamed preview of the model rewrite (token-by-token) instead of
-      waiting for the full answer.
-- [ ] Per-intent system prompts for the LLM path (code vs. analysis vs. question).
-- [ ] Optional custom system prompt / style presets configurable by the user.
-- [ ] Better handling of very long drafts (chunking or summarisation before rewrite).
+- [ ] Добавить настоящий тестовый каркас (скрипты Node в `test/`), покрывающий
+      `buildPrompt` и Host-маршрут с замоканным `ctx.llm`.
+- [ ] Вынести настройки плагина (provider/model/timeout/maxTokens) в схему
+      `Config` вместо сырого `config`.
+- [ ] Показывать имя активной модели в тултипе в режиме LLM.
+- [ ] Добавить возможность скопировать сгенерированный промпт в буфер обмена.
+- [ ] Поддержать стриминговый предпросмотр переписывания моделью (токен за
+      токеном) вместо ожидания полного ответа.
+- [ ] Раздельные системные промпты для LLM-пути (код / анализ / вопрос).
+- [ ] Пользовательские стилевые пресеты и свой системный промпт.
+- [ ] Лучшая обработка очень длинных черновиков (чанкинг или суммаризация
+      перед переписыванием).
 
-## Maybe later
+## Возможно позже
 
-- [ ] Publish to the DSH plugin market.
-- [ ] Telemetry opt-in for template vs. LLM usage.
-- [ ] A sidebar panel with prompt history and favourites.
+- [ ] Публикация в маркетплейс плагинов DSH.
+- [ ] Опциональная телеметрия (использование шаблона vs. LLM).
+- [ ] Боковая панель с историей промптов и избранным.

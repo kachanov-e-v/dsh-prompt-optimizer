@@ -1,135 +1,136 @@
 # dsh-prompt-optimizer
 
-A DeepSeek Harness (DSH) plugin that adds a one-click **Prompt Optimizer** button
-to the composer tool row. It rewrites a rough draft into a high-quality,
-structured, professional prompt, either with the user's selected LLM or with a
-deterministic local template, and writes the result back into the composer.
+Плагин DeepSeek Harness (DSH), который добавляет в строку инструментов композера
+кнопку **«Оптимизатор промптов»** (Prompt Optimizer). Он переписывает черновик
+запроса в качественный, структурированный, профессиональный промпт — либо
+моделью, выбранной пользователем, либо детерминированным локальным шаблоном, —
+и записывает результат обратно в поле ввода.
 
-- **Package**: `dsh-prompt-optimizer` (version 3.0.0)
-- **Type**: DSH Cordis bundle (`host` + `client`)
-- **UI slot**: `conversation.input.left`
-- **License**: MIT
+- **Пакет:** `dsh-prompt-optimizer` (версия 3.0.0)
+- **Тип:** DSH Cordis-бандл (`host` + `client`)
+- **Слот UI:** `conversation.input.left`
+- **Лицензия:** MIT
 
-## What it does
+## Что делает
 
-The button sits in the left part of the composer tool row, next to the other
-compact controls. It has two modes, switchable with the small chip next to it:
+Кнопка располагается в левой части строки инструментов композера, рядом с
+остальными компактными элементами управления. У неё два режима, переключаемых
+маленьким чипом рядом:
 
-| Mode | Behaviour |
-|------|-----------|
-| **LLM** (default) | Sends the draft to the Host route `/dsh-prompt-optimizer/optimize`, which streams a rewrite through the configured LLM (`ctx.llm`, using the default model selection). The model is instructed to preserve intent and return only the improved prompt. |
-| **Шаблон / Template** | Rewrites the draft locally with a deterministic template: role, task, context, requirements, output format and quality criteria. No network call, no tokens. |
+| Режим | Поведение |
+|-------|-----------|
+| **LLM** (по умолчанию) | Отправляет черновик на Host-маршрут `/dsh-prompt-optimizer/optimize`, который стримит переписывание через настроенную LLM (`ctx.llm`, используется модель по умолчанию). Модель инструктируется сохранять смысл и возвращать только улучшенный промпт. |
+| **Шаблон** | Переписывает черновик локально по детерминированному шаблону: роль, задача, контекст, требования, формат ответа и критерии качества. Без сетевого запроса, без токенов. |
 
-Clicking the main button again restores the original draft. The selected mode is
-persisted in `localStorage`.
+Повторный клик по основной кнопке возвращает исходный черновик. Выбранный
+режим сохраняется в `localStorage`.
 
-## Fallback behaviour
+## Поведение при ошибках
 
-If the model is unavailable (no default model, LLM service missing, provider
-error, timeout, aborted request, gate refusal), the plugin automatically applies
-the local template, shows a warning dot with the reason, and — for
-`NO_MODEL` / `NO_LLM` — switches the mode to **Template**. If the user edits the
-draft while the model is working, the model result is discarded so it never
-overwrites the user's new text.
+Если модель недоступна (нет модели по умолчанию, отсутствует LLM-сервис,
+ошибка провайдера, таймаут, отмена запроса, отказ gate), плагин автоматически
+применяет локальный шаблон, показывает предупреждающую точку с причиной и — при
+`NO_MODEL` / `NO_LLM` — переключает режим на **Шаблон**. Если пользователь
+изменил черновик, пока модель работала, результат модели не затирает новые
+правки.
 
-## Files
+## Файлы
 
 ```
 dsh-prompt-optimizer/
-├── package.json          # bundle manifest (dsh.bundle.patch + dsh.client)
-├── cordis.patch.yml      # inserts the host + client plugin rows
-├── index.js              # Host half: HTTP route + LLM streaming
-├── client.js             # Client half: slot registration + UI
-├── icon.svg              # plugin icon
+├── package.json          # манифест бандла (dsh.bundle.patch + dsh.client)
+├── cordis.patch.yml      # вставляет строки плагинов host + client
+├── index.js              # Host-половина: HTTP-маршрут + стриминг LLM
+├── client.js             # Client-половина: регистрация слота + UI
+├── icon.svg              # иконка плагина
 ├── locale/
-│   ├── en.json           # English metadata
-│   └── ru.json           # Russian metadata
+│   ├── en.json           # метаданные на английском
+│   └── ru.json           # метаданные на русском
 ├── README.md
 ├── AGENTS.md
 └── ROADMAP.md
 ```
 
-## Installation (DSH)
+## Установка (DSH)
 
-This is a linked (local) bundle. From a DSH profile shell:
+Это связанный (локальный) бандл. Из оболочки профиля DSH:
 
 ```bash
-# install from the local directory
-dsh plugin install "C:\path\to\dsh-prompt-optimizer"
+# установка из локального каталога
+dsh plugin install "C:\путь\к\dsh-prompt-optimizer"
 
-# or via the Plugin Manager UI: Plugins -> Install from directory
+# или через UI Plugin Manager: Plugins -> Install from directory
 ```
 
-After installation, enable the bundle in the profile (it is enabled by default)
-and reload the page (`F5`) so the client module is picked up.
+После установки включите бандл в профиле (по умолчанию он включён) и
+перезагрузите страницу (`F5`), чтобы клиентский модуль был подхвачен.
 
-## Usage
+## Использование
 
-1. Open a session in the DSH Web UI.
-2. Look at the left part of the composer tool row — you will see **✨ Улучшить /
-   Improve** plus a small **LLM / Шаблон** chip.
-3. Type a rough draft into the composer.
-4. Click **Улучшить**. In LLM mode the button shows **Улучшаю…** while the
-   request runs; in template mode the rewrite is instant.
-5. The composer now contains the improved prompt. Click the button again to
-   restore the original draft.
-6. Use the chip to switch modes. The choice is remembered between sessions.
+1. Откройте сессию в Web UI DSH.
+2. Посмотрите на левую часть строки инструментов композера — там будет
+   **✨ Улучшить** плюс маленький чип **LLM / Шаблон**.
+3. Введите черновик запроса в поле ввода.
+4. Нажмите **Улучшить**. В режиме LLM кнопка показывает **Улучшаю…**, пока
+   выполняется запрос; в режиме шаблона переписывание мгновенное.
+5. Поле ввода теперь содержит улучшенный промпт. Нажмите кнопку ещё раз, чтобы
+   вернуть исходный черновик.
+6. Используйте чип для переключения режима. Выбор запоминается между сессиями.
 
-The UI language follows the active DSH locale (`ru`, `zh`, `en`).
+Язык интерфейса следует активной локали DSH (`ru`, `zh`, `en`).
 
-## Host route contract
+## Контракт Host-маршрута
 
 `POST /dsh-prompt-optimizer/optimize`
 
-Request body (JSON):
+Тело запроса (JSON):
 
 ```json
-{ "text": "draft", "language": "ru" }
+{ "text": "черновик", "language": "ru" }
 ```
 
-- `text` — required, non-empty, up to 20 000 characters.
-- `language` — `"ru"` or `"en"` (default `"en"`).
+- `text` — обязательно, непустая строка, до 20 000 символов.
+- `language` — `"ru"` или `"en"` (по умолчанию `"en"`).
 
-Response (JSON):
+Ответ (JSON):
 
 ```json
-{ "ok": true, "text": "improved prompt", "provider": "...", "model": "..." }
+{ "ok": true, "text": "улучшенный промпт", "provider": "...", "model": "..." }
 ```
 
-Error responses carry `{ "ok": false, "code": "...", "error": "..." }` with
-status codes `400 / 401 / 403 / 409 / 413 / 415 / 502 / 504`.
+Ошибки возвращаются как `{ "ok": false, "code": "...", "error": "..." }` со
+статусами `400 / 401 / 403 / 409 / 413 / 415 / 502 / 504`.
 
-Security: same-origin check, Host request gate (`connection.requestRejection`),
-bounded body (`32 KiB`) and text length.
+Безопасность: проверка same-origin, Host request gate (`connection.requestRejection`),
+ограничение размера тела (`32 KiB`) и длины текста.
 
-## Development
+## Разработка
 
-- Host half: plain ESM, no build step. Exports `apply(ctx, config)` and
-  `inject = ['webServer']`.
-- Client half: a `window.__ModuleLoader__.load` factory, React from the browser
-  module table, no JSX transform. All DOM/CSS is self-contained.
-- Local template logic lives in `buildPrompt` / `detectIntent` /
-  `detectLanguage` / `cleanDraft` inside `client.js`.
-- No tests are committed yet; the functional checks used during development
-  were ad-hoc Node scripts (not part of the repo).
+- Host-половина: обычный ESM, без шага сборки. Экспортирует `apply(ctx, config)`
+  и `inject = ['webServer']`.
+- Client-половина: фабрика `window.__ModuleLoader__.load`, React из таблицы
+  модулей браузера, без JSX-трансформации. Вся разметка и CSS самодостаточны.
+- Логика локального шаблона находится в `buildPrompt` / `detectIntent` /
+  `detectLanguage` / `cleanDraft` внутри `client.js`.
+- Тестов в репозитории пока нет; функциональные проверки при разработке
+  выполнялись ad-hoc скриптами Node (в репозиторий не входят).
 
-## Configuration
+## Конфигурация
 
-The bundle accepts an optional `config` object on the plugin row:
+Бандл принимает необязательный объект `config` в строке плагина:
 
 ```yaml
 - id: dsh-prompt-optimizer
   config:
-    provider: deepseek-official   # override LLM provider
-    model: deepseek-v4-flash      # override LLM model
-    timeoutMs: 45000              # request timeout, 3000..120000
-    maxTokens: 1200               # output cap, 128..4000
+    provider: deepseek-official   # переопределить LLM-провайдера
+    model: deepseek-v4-flash      # переопределить LLM-модель
+    timeoutMs: 45000              # таймаут запроса, 3000..120000
+    maxTokens: 1200               # ограничение вывода, 128..4000
 ```
 
-When `provider`/`model` are omitted, the current default model selection is
-used.
+Если `provider`/`model` не указаны, используется текущая модель по умолчанию.
 
-## Contributing
+## Участие в разработке
 
-See [AGENTS.md](AGENTS.md) for repository conventions and [ROADMAP.md](ROADMAP.md)
-for planned work. Pull requests are welcome.
+См. [AGENTS.md](AGENTS.md) — соглашения репозитория, и [ROADMAP.md](ROADMAP.md) —
+планы работы. Pull request приветствуются.
