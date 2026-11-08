@@ -86,12 +86,17 @@ dsh plugin --profile desktop add \
 Этот вариант не вызывает Git и работает даже там, где сломан TLS-бэкенд Git:
 
 ```bash
+# стабильная версия 3.1.0 (тег, неизменяемый архив)
+dsh plugin --profile desktop add \
+  https://github.com/kachanov-e-v/dsh-prompt-optimizer/archive/refs/tags/v3.1.0.tar.gz
+
+# последняя версия ветки master
 dsh plugin --profile desktop add \
   https://github.com/kachanov-e-v/dsh-prompt-optimizer/archive/refs/heads/master.tar.gz
 ```
 
-Архив ставит снимок ветки `master`. Для обновления повторите установку; для
-стабильной версии используйте тег/релиз, когда он опубликован.
+Архив тега ставит неизменяемую версию, архив `master` — последний снимок
+ветки. Для обновления повторите установку с новым тегом.
 
 ### Windows: `schannel: SEC_E_NO_CREDENTIALS`
 
