@@ -32,9 +32,16 @@
 - Проверка синтаксиса: `node --check client.js && node --check index.js`.
 - Проверка JSON: разбор `package.json` и `locale/*.json`.
 - SVG: должен разбираться как XML (`[xml](Get-Content icon.svg)`).
+- Проверка состава пакета: `npm pack --dry-run --json` (кэш npm держать внутри
+  рабочего каталога, иначе sandbox может запретить запись).
 - Бандл связан с профилем из этого каталога; после правок переустановить через
   `plugin_manager install_bundle` (или удалить + установить) и перезагрузить
   страницу.
+- Для проверки GitHub-установки использовать архив
+  `.../archive/refs/heads/master.tar.gz`: он не зависит от TLS-бэкенда Git.
+  Прямая git-спецификация на Windows может требовать
+  `git config --global http.sslBackend openssl`; не менять глобальный конфиг
+  без явного согласия пользователя.
 
 ## Не делать
 
@@ -47,7 +54,10 @@
 
 ## Релиз
 
-- Поднять `version` в `package.json`.
+- Поднять `version` в `package.json` и синхронизировать версию в README.
+- Прогнать проверки из раздела «Работа с кодом» и `npm pack --dry-run`.
 - Переустановить бандл в профиле и проверить регистрацию слота через
   `cordis_inspect_query` (`Slots.listSubTree`, корень `conversation.input.left`).
-- Запушить на GitHub (ветка `master`).
+- Закоммитить, поставить тег `vX.Y.Z`, запушить ветку `master` и тег.
+- Проверить установку из GitHub по архивной ссылке тега/ветки (см. README) и
+  сообщить, если для прямой git-спецификации нужен `http.sslBackend=openssl`.

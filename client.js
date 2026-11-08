@@ -109,34 +109,36 @@ window.__ModuleLoader__.load({
     }
 
     function detectLanguage(text) {
-      return /[\u0400-\u04FF]/.test(text) ? 'ru' : 'en';
+      if (/[\u0400-\u04FF]/.test(text)) return 'ru';
+      if (/[\u4E00-\u9FFF]/.test(text)) return 'zh';
+      return 'en';
     }
 
     function detectIntent(text) {
       const lower = text.toLowerCase();
       if (
-        /```|<\?php|\bfunction\b|\bclass\b|\bconst\b|\bimport\b|\bdef\b|ошибк|баг|код|скрипт|\bapi\b|\bsql\b|regex|python|javascript|typescript|react|node\.?js|css|html|\.js\b|\.ts\b|\.py\b/.test(
+        /```|<\?php|\bfunction\b|\bclass\b|\bconst\b|\bimport\b|\bdef\b|ошибк|баг|код|скрипт|\bapi\b|\bsql\b|regex|python|javascript|typescript|react|node\.?js|css|html|\.js\b|\.ts\b|\.py\b|代码|编程|脚本|函数|接口|数据库|报错|异常|错误/.test(
           lower,
         )
       ) {
         return 'code';
       }
       if (
-        /создай|сделай|напиши|разработай|построй|спроектируй|\bbuild\b|\bcreate\b|\bmake\b|\bwrite\b|\bdesign\b|\bimplement\b|\bgenerate\b/.test(
+        /создай|сделай|напиши|разработай|построй|спроектируй|\bbuild\b|\bcreate\b|\bmake\b|\bwrite\b|\bdesign\b|\bimplement\b|\bgenerate\b|创建|设计|实现|开发|编写|生成|搭建/.test(
           lower,
         )
       ) {
         return 'create';
       }
       if (
-        /проанализируй|объясни|сравни|оцени|разбери|analy[sz]e|explain|compare|evaluate|review|research/.test(
+        /проанализируй|объясни|сравни|оцени|разбери|analy[sz]e|explain|compare|evaluate|review|research|分析|解释|比较|评估|评审|研究/.test(
           lower,
         )
       ) {
         return 'analyze';
       }
       if (
-        /\?|^(что|как|почему|зачем|когда|где|кто|какой|какая|какие|сколько|можно|стоит|what|how|why|when|where|who|which|should|can|is|are|does|do)\b/.test(
+        /\?|？|^(что|как|почему|зачем|когда|где|кто|какой|какая|какие|сколько|можно|стоит|what|how|why|when|where|who|which|should|can|is|are|does|do)\b|如何|怎么|怎样|为什么|何时|哪里|哪个|多少|能否/.test(
           lower,
         )
       ) {
@@ -263,12 +265,66 @@ window.__ModuleLoader__.load({
       },
     };
 
+    const ZH = {
+      role: {
+        code: '你是一名资深软件工程师。给出可用于生产环境的方案，考虑边界情况、安全性和性能。',
+        create: '你是一名经验丰富的产品与工程专家。提出周全、可落地的方案。',
+        analyze: '你是一名分析师。以事实为依据，明确区分假设与结论，并给出明确的建议。',
+        question: '你是该主题的资深专家。回答准确、切题，不空泛。',
+        general: '你是一名经验丰富的专家。以专业、结构化且切题的方式工作。',
+      },
+      requirements: {
+        code: [
+          '遵循最佳实践，处理错误和边界情况。',
+          '提供可运行的代码，并附简要说明。',
+          '如有需要，列明依赖和运行步骤。',
+        ],
+        create: [
+          '给出具体成果和行动计划，而不是泛泛而谈。',
+          '说明关键假设。',
+          '适当时附上示例或草图。',
+        ],
+        analyze: [
+          '按明确的标准比较各个选项。',
+          '区分事实与假设。',
+          '给出明确的结论和建议。',
+        ],
+        question: [
+          '在第一段给出直接答案。',
+          '解释原因并给出示例。',
+          '说明局限性和不适用的场景。',
+        ],
+        general: [
+          '具体明确，避免空话。',
+          '提供示例和可执行的步骤。',
+          '如果信息不足，最多提出三个澄清问题。',
+        ],
+      },
+      format: {
+        code: ['1. 简要方案', '2. 代码', '3. 说明与边界情况', '4. 验证方法'],
+        create: ['1. 任务理解', '2. 建议方案', '3. 实施计划', '4. 示例或草图', '5. 后续步骤'],
+        analyze: ['1. 简要结论', '2. 标准与对比', '3. 依据', '4. 建议'],
+        question: ['1. 直接答案', '2. 解释', '3. 示例', '4. 局限性'],
+        general: ['1. 任务简述', '2. 分步回答', '3. 示例', '4. 后续步骤'],
+      },
+      context: '用中文回答。保留原始意图，不要添加用户未要求的额外要求。',
+      quality: ['完整与准确。', '结构清晰，语气专业。', '具备实际可操作性。'],
+      headings: {
+        role: '角色',
+        task: '任务',
+        context: '背景',
+        requirements: '要求',
+        format: '回答格式',
+        quality: '质量标准',
+      },
+    };
+
     function buildPrompt(raw) {
       const text = cleanDraft(raw);
       if (!text) return '';
       const language = detectLanguage(text);
       const intent = detectIntent(text);
-      const copy = language === 'ru' ? RU : EN;
+      const copy = language === 'ru' ? RU : language === 'zh' ? ZH : EN;
       const headings = copy.headings;
 
       return [
@@ -358,13 +414,13 @@ window.__ModuleLoader__.load({
           return ctx.locale.subscribe(update);
         }, []);
 
-        React.useEffect(
-          () => () => {
+        React.useEffect(() => {
+          aliveRef.current = true;
+          return () => {
             aliveRef.current = false;
             if (abortRef.current) abortRef.current.abort();
-          },
-          [],
-        );
+          };
+        }, []);
 
         const copy = COPY[lang] || COPY.en;
 
@@ -377,7 +433,7 @@ window.__ModuleLoader__.load({
         }, [draft]);
 
         const empty = !draft || !draft.trim();
-        const machineBusy = phase === 'adjudicating' || phase === 'submitting';
+        const machineBusy = phase === 'adjudicating' || phase === 'submitting' || phase === 'sending';
         const disabled = empty || machineBusy;
 
         const applyResult = (result, original) => {
@@ -511,6 +567,8 @@ window.__ModuleLoader__.load({
                   key: 'notice',
                   className: 'dpo-notice',
                   role: 'status',
+                  'aria-label': notice,
+                  'aria-live': 'polite',
                   title: notice,
                 })
               : null,
@@ -524,7 +582,7 @@ window.__ModuleLoader__.load({
             name: 'conversation.input.left',
             id: 'prompt-optimizer',
             order: 100,
-            label: () => COPY[currentLanguage()].action.optimize,
+            label: () => COPY[currentLanguage()]['action.optimize'],
           },
           PromptOptimizerChip,
         ),

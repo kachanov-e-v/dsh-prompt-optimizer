@@ -6,8 +6,10 @@
  * UI and falls back to its local template when no model is available.
  */
 const ROUTE_PATH = '/dsh-prompt-optimizer/optimize';
-const MAX_BODY_BYTES = 32 * 1024;
 const MAX_DRAFT_CHARS = 20000;
+// 20 000 characters can occupy up to 4 bytes each in UTF-8, and JSON adds
+// quotes and escapes; 128 KiB keeps the declared character limit reachable.
+const MAX_BODY_BYTES = 128 * 1024;
 
 export const inject = ['webServer'];
 
@@ -59,12 +61,22 @@ function readJsonBody(request) {
       settled = true;
       reject(error);
     });
+    request.on('aborted', () => {
+      if (settled) return;
+      settled = true;
+      reject(fail('ABORTED', 'Request was aborted'));
+    });
   });
 }
 
 /** Reject requests that the Host's own gate or origin rule does not admit. */
 function refusalStatus(ctx, request) {
-  const connection = ctx.get('connection');
+  let connection;
+  try {
+    connection = ctx.get('connection');
+  } catch {
+    connection = undefined;
+  }
   const gate = connection && typeof connection.requestRejection === 'function'
     ? connection.requestRejection.bind(connection)
     : undefined;
@@ -96,14 +108,21 @@ function stripOuterFence(value) {
 
 /** The rewrite instruction: preserve meaning, return only the improved prompt. */
 function systemPrompt(language) {
-  const answerLanguage = language === 'ru' ? 'Russian' : 'English';
+  const answerLanguage = language === 'ru'
+    ? 'Russian'
+    : language === 'zh'
+      ? 'Chinese'
+      : 'English';
+  const lengthGuide = language === 'zh'
+    ? 'roughly 200-400 Chinese characters'
+    : 'roughly 120-220 words';
   return [
     'You are a prompt engineer. Rewrite the user draft into a high-quality, structured, professional prompt.',
     'Rules:',
     "- Preserve the user's intent, constraints, and concrete details; never invent facts.",
     '- Do not answer the request. Return only the improved prompt.',
     '- Use a clear structure: role, task, context, requirements, output format, quality criteria.',
-    '- Keep the result concise: roughly 120-220 words.',
+    `- Keep the result concise: ${lengthGuide}.`,
     `- Write the improved prompt in ${answerLanguage}.`,
     '- If the draft contains code, keep it verbatim.',
     '- Return plain text only, with no preamble, commentary, or fence around the whole answer.',
@@ -112,18 +131,37 @@ function systemPrompt(language) {
 
 /** Stream one model rewrite and return the assembled text. */
 async function rewriteWithModel(ctx, text, language, settings) {
-  const llm = ctx.get('llm');
+  let llm;
+  try {
+    llm = ctx.get('llm');
+  } catch {
+    llm = undefined;
+  }
   if (!llm) throw fail('NO_LLM', 'The LLM service is not available in this profile');
-  const defaultModel = ctx.get('agentDefaultModel');
+  let defaultModel;
+  try {
+    defaultModel = ctx.get('agentDefaultModel');
+  } catch {
+    defaultModel = undefined;
+  }
   let selection;
   try {
     selection = defaultModel?.currentSelection?.();
   } catch {
     selection = undefined;
   }
-  const provider = settings.provider || selection?.provider;
-  const model = settings.model || selection?.model;
+  const configuredProvider = typeof settings.provider === 'string' && settings.provider.trim() !== ''
+    ? settings.provider.trim()
+    : undefined;
+  const configuredModel = typeof settings.model === 'string' && settings.model.trim() !== ''
+    ? settings.model.trim()
+    : undefined;
+  const provider = configuredProvider || selection?.provider;
+  const model = configuredModel || selection?.model;
   if (!provider || !model) throw fail('NO_MODEL', 'No default model is selected');
+  const reasoningEffort = !configuredProvider && !configuredModel
+    ? selection?.reasoningEffort
+    : undefined;
 
   const timeoutMs = Number.isFinite(settings.timeoutMs)
     ? Math.max(3000, Math.min(120000, settings.timeoutMs))
@@ -139,7 +177,7 @@ async function rewriteWithModel(ctx, text, language, settings) {
     for await (const chunk of llm.stream({
       provider,
       model,
-      ...(selection?.reasoningEffort ? { reasoningEffort: selection.reasoningEffort } : {}),
+      ...(reasoningEffort ? { reasoningEffort } : {}),
       system: systemPrompt(language),
       messages: [
         {
@@ -154,11 +192,15 @@ async function rewriteWithModel(ctx, text, language, settings) {
       if (chunk.type === 'text-delta') {
         output += chunk.text;
       } else if (chunk.type === 'finish') {
-        if (chunk.reason.kind === 'error') {
-          throw fail(chunk.reason.failure.code || 'LLM_ERROR', chunk.reason.failure.message || 'Model call failed');
-        }
-        if (chunk.reason.kind === 'aborted') {
-          throw fail(controller.signal.aborted ? 'TIMEOUT' : 'ABORTED', 'Model call was cancelled');
+        const reason = chunk.reason;
+        if (reason.kind === 'error' || reason.kind === 'aborted') {
+          const failure = reason.failure;
+          const code = controller.signal.aborted && reason.kind === 'aborted'
+            ? 'TIMEOUT'
+            : failure?.code || (reason.kind === 'aborted' ? 'ABORTED' : 'LLM_ERROR');
+          const message = failure?.message
+            || (reason.kind === 'aborted' ? 'Model call was cancelled' : 'Model call failed');
+          throw fail(code, message);
         }
       }
     }
@@ -184,7 +226,7 @@ async function handle(ctx, request, response, settings) {
     return;
   }
   const contentType = String(request.headers['content-type'] || '');
-  if (!contentType.includes('application/json')) {
+  if (!contentType.toLowerCase().includes('application/json')) {
     sendJson(response, 415, { ok: false, code: 'UNSUPPORTED_MEDIA_TYPE', error: 'Expected application/json' });
     return;
   }
@@ -211,7 +253,7 @@ async function handle(ctx, request, response, settings) {
     sendJson(response, 413, { ok: false, code: 'TEXT_TOO_LONG', error: 'Draft is too long' });
     return;
   }
-  const language = body?.language === 'ru' ? 'ru' : 'en';
+  const language = body?.language === 'ru' || body?.language === 'zh' ? body.language : 'en';
 
   try {
     const result = await rewriteWithModel(ctx, text, language, settings);
