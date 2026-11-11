@@ -1,10 +1,13 @@
 {
   "name": "dsh-prompt-optimizer",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "private": true,
   "type": "module",
   "description": "Prompt improver for DeepSeek Harness: rewrites a draft with the selected model or a local template, then writes it back into the composer.",
   "license": "MIT",
+  "scripts": {
+    "check": "node test/rules-check.mjs ."
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kachanov-e-v/dsh-prompt-optimizer.git"
@@ -32,6 +35,7 @@
     "client.js",
     "cordis.patch.yml",
     "locale/*.json",
+    "test/*.mjs",
     "icon.svg",
     "README.md",
     "LICENSE"

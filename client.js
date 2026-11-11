@@ -167,7 +167,7 @@ window.__ModuleLoader__.load({
       },
       requirements: {
         code: [
-          'Соблюдай лучшие практики, обрабатывай ошибки и граничные случаи.',
+          'Соблюдай конвенции языка и фреймворка, совместимость версий и безопасность.',
           'Приведи рабочий код с краткими пояснениями.',
           'Укажи зависимости и шаги запуска, если они нужны.',
         ],
@@ -189,7 +189,7 @@ window.__ModuleLoader__.load({
         general: [
           'Будь конкретен и избегай общих фраз.',
           'Приведи примеры и практические шаги.',
-          'Если данных недостаточно, задай не более трёх уточняющих вопросов.',
+          'Не заполняй пробелы догадками: чего не хватает для ответа — уточни.',
         ],
       },
       format: {
@@ -200,12 +200,22 @@ window.__ModuleLoader__.load({
         general: ['1. Краткое понимание задачи', '2. Ответ по шагам', '3. Примеры', '4. Следующие шаги'],
       },
       context: 'Отвечай на русском языке. Сохрани исходный смысл запроса и не добавляй лишних требований.',
+      rules: [
+        'Документацию веди вместе с кодом: AGENTS.md — правила и соглашения для агентов, ROADMAP.md — статус, приоритеты и следующие шаги, README.md — установка, использование и архитектура; создавай файл, если его ещё нет, и обновляй в той же задаче.',
+        'Держи знание в репозитории, а не в переписке: фиксируй текущее состояние, принятые решения и их причины, известные проблемы и следующий шаг, чтобы новая сессия продолжила работу без истории чата.',
+        'Не угадывай: при нехватке данных задай до трёх точных вопросов; на развилке перечисли варианты и явно порекомендуй лучший с обоснованием.',
+        'Отвечай и задавай вопросы только на русском языке.',
+        'Весь проект веди на русском: документация, тексты интерфейса, комментарии, сообщения об ошибках, коммиты и правила; по-английски — только технические идентификаторы и имена внешних API.',
+        'Опирайся на проверенные практики: маленькие проверяемые шаги, обработка ошибок и граничных случаев, отсутствие секретов в репозитории, автоматические проверки до отчёта о готовности.',
+        'Отчитывайся по факту: что проверено и какими командами, что осталось непроверенным и какие риски сохраняются; непроверенный результат не называй готовым.',
+      ],
       quality: ['Полнота и точность.', 'Ясная структура и профессиональный тон.', 'Практическая применимость.'],
       headings: {
         role: 'Роль',
         task: 'Задача',
         context: 'Контекст',
         requirements: 'Требования',
+        rules: 'Правила работы',
         format: 'Формат ответа',
         quality: 'Критерии качества',
       },
@@ -221,7 +231,7 @@ window.__ModuleLoader__.load({
       },
       requirements: {
         code: [
-          'Follow best practices and handle errors and edge cases.',
+          'Follow the conventions of the language and framework, version compatibility, and security.',
           'Provide working code with brief explanations.',
           'List dependencies and run steps when needed.',
         ],
@@ -243,7 +253,7 @@ window.__ModuleLoader__.load({
         general: [
           'Be concrete and avoid generic filler.',
           'Provide examples and practical steps.',
-          'If information is insufficient, ask at most three clarifying questions.',
+          'Do not fill gaps with guesses: ask for what is missing.',
         ],
       },
       format: {
@@ -254,12 +264,20 @@ window.__ModuleLoader__.load({
         general: ['1. Brief understanding of the task', '2. Step-by-step answer', '3. Examples', '4. Next steps'],
       },
       context: 'Answer in English. Preserve the original intent and do not add requirements the user did not ask for.',
+      rules: [
+        'Keep documentation alive with the code: AGENTS.md for rules and conventions for agents, ROADMAP.md for status, priorities and next steps, README.md for installation, usage and architecture; create the file when it does not exist yet and update it in the same change.',
+        'Keep knowledge in the repository, not in the chat: record the current state, decisions and their reasons, known issues and the next step so a new session can continue without the chat history.',
+        'Never guess: when information is missing ask up to three precise questions; at a fork list the options and state a clear recommendation with reasoning.',
+        'Rely on proven practices: small verifiable steps, error and edge-case handling, no secrets in the repository, automated checks before reporting success.',
+        'Report facts: what you verified and with which commands, what remains unverified and which risks stay; never call unverified work done.',
+      ],
       quality: ['Completeness and accuracy.', 'Clear structure and professional tone.', 'Practical applicability.'],
       headings: {
         role: 'Role',
         task: 'Task',
         context: 'Context',
         requirements: 'Requirements',
+        rules: 'Working rules',
         format: 'Output format',
         quality: 'Quality criteria',
       },
@@ -275,7 +293,7 @@ window.__ModuleLoader__.load({
       },
       requirements: {
         code: [
-          '遵循最佳实践，处理错误和边界情况。',
+          '遵循语言与框架的约定、版本兼容性和安全性。',
           '提供可运行的代码，并附简要说明。',
           '如有需要，列明依赖和运行步骤。',
         ],
@@ -297,7 +315,7 @@ window.__ModuleLoader__.load({
         general: [
           '具体明确，避免空话。',
           '提供示例和可执行的步骤。',
-          '如果信息不足，最多提出三个澄清问题。',
+          '不要用猜测填补空缺：缺少什么就问。',
         ],
       },
       format: {
@@ -308,12 +326,20 @@ window.__ModuleLoader__.load({
         general: ['1. 任务简述', '2. 分步回答', '3. 示例', '4. 后续步骤'],
       },
       context: '用中文回答。保留原始意图，不要添加用户未要求的额外要求。',
+      rules: [
+        '文档与代码同步维护：AGENTS.md 记录代理的规则与约定，ROADMAP.md 记录状态、优先级和后续步骤，README.md 记录安装、使用与架构；文件尚未存在时先创建，并与代码在同一次改动中更新。',
+        '把知识留在仓库而不是对话里：记录当前状态、已做的决定及理由、已知问题和下一步，使新会话无需聊天历史即可继续工作。',
+        '不要猜测：信息不足时提出至多三个明确问题；在分叉处列出选项并给出明确推荐及理由。',
+        '遵循经过验证的实践：小而可验证的步骤、处理错误与边界情况、仓库中不放密钥、在报告完成前运行自动检查。',
+        '如实汇报：说明验证了什么、用了哪些命令、哪些尚未验证、还剩哪些风险；未经验证的结果不要称为完成。',
+      ],
       quality: ['完整与准确。', '结构清晰，语气专业。', '具备实际可操作性。'],
       headings: {
         role: '角色',
         task: '任务',
         context: '背景',
         requirements: '要求',
+        rules: '工作规则',
         format: '回答格式',
         quality: '质量标准',
       },
@@ -339,6 +365,9 @@ window.__ModuleLoader__.load({
         '',
         '## ' + headings.requirements,
         copy.requirements[intent].map((item) => '- ' + item).join('\n'),
+        '',
+        '## ' + headings.rules,
+        copy.rules.map((item) => '- ' + item).join('\n'),
         '',
         '## ' + headings.format,
         copy.format[intent].join('\n'),
