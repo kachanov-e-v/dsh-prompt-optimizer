@@ -25,6 +25,7 @@ window.__ModuleLoader__.load({
       'mode.title': 'Improvement mode: model rewrite or local template',
       'busy': 'Improving…',
       'fallback': 'The model is unavailable — the template was applied',
+      'fallbackTruncated': 'The model answer hit the token limit — the template was applied',
       'changed': 'The draft changed while the model was working; the result was not applied',
       'llm.title': 'Rewrite the draft with the selected model',
       'template.title': 'Structure the draft with the local template, without a model call',
@@ -42,6 +43,7 @@ window.__ModuleLoader__.load({
       'mode.title': '优化模式：模型改写或本地模板',
       'busy': '优化中…',
       'fallback': '模型不可用，已应用模板',
+      'fallbackTruncated': '模型输出达到长度上限，已应用模板',
       'changed': '模型处理期间草稿已更改，结果未应用',
       'llm.title': '用所选模型改写草稿',
       'template.title': '用本地模板结构化草稿，不调用模型',
@@ -59,6 +61,7 @@ window.__ModuleLoader__.load({
       'mode.title': 'Режим улучшения: переписывание моделью или локальный шаблон',
       'busy': 'Улучшаю…',
       'fallback': 'Модель недоступна — применён шаблон',
+      'fallbackTruncated': 'Ответ модели упёрся в лимит токенов — применён шаблон',
       'changed': 'Черновик изменился во время работы модели — результат не применён',
       'llm.title': 'Переписать черновик выбранной моделью',
       'template.title': 'Структурировать черновик локальным шаблоном без вызова модели',
@@ -167,7 +170,7 @@ window.__ModuleLoader__.load({
       },
       requirements: {
         code: [
-          'Соблюдай конвенции языка и фреймворка, совместимость версий и безопасность.',
+          'Покажи, как проверить результат: команда, тест или сценарий.',
           'Приведи рабочий код с краткими пояснениями.',
           'Укажи зависимости и шаги запуска, если они нужны.',
         ],
@@ -189,7 +192,7 @@ window.__ModuleLoader__.load({
         general: [
           'Будь конкретен и избегай общих фраз.',
           'Приведи примеры и практические шаги.',
-          'Не заполняй пробелы догадками: чего не хватает для ответа — уточни.',
+          'Укажи следующий практический шаг: что делать дальше.',
         ],
       },
       format: {
@@ -199,21 +202,25 @@ window.__ModuleLoader__.load({
         question: ['1. Прямой ответ', '2. Объяснение', '3. Пример', '4. Ограничения'],
         general: ['1. Краткое понимание задачи', '2. Ответ по шагам', '3. Примеры', '4. Следующие шаги'],
       },
-      context: 'Отвечай на русском языке. Сохрани исходный смысл запроса и не добавляй лишних требований.',
       rules: [
-        'Документацию веди вместе с кодом: AGENTS.md — правила и соглашения для агентов, ROADMAP.md — статус, приоритеты и следующие шаги, README.md — установка, использование и архитектура; создавай файл, если его ещё нет, и обновляй в той же задаче.',
-        'Держи знание в репозитории, а не в переписке: фиксируй текущее состояние, принятые решения и их причины, известные проблемы и следующий шаг, чтобы новая сессия продолжила работу без истории чата.',
-        'Не угадывай: при нехватке данных задай до трёх точных вопросов; на развилке перечисли варианты и явно порекомендуй лучший с обоснованием.',
+        'Документацию веди вместе с кодом: AGENTS.md — правила и соглашения для агентов, ROADMAP.md — статус, приоритеты и следующий шаг, README.md — установка, использование и архитектура. У каждого файла своя роль — не переписывай одно и то же в трёх местах; создавай файл, если его ещё нет.',
+        'Держи знание в репозитории, а не в переписке: фиксируй текущее состояние, принятые решения, их причины, известные проблемы и следующий шаг, чтобы новая сессия продолжила работу без истории чата. Решение без причины считается незафиксированным.',
+        'Не угадывай: не выдумывай API, пути, версии и цифры — не уверен, проверь или спроси. При нехватке данных задай до трёх точных вопросов; на развилке перечисли варианты и явно порекомендуй лучший с обоснованием. Отделяй факт от предположения.',
         'Отвечай и задавай вопросы только на русском языке.',
-        'Весь проект веди на русском: документация, тексты интерфейса, комментарии, сообщения об ошибках, коммиты и правила; по-английски — только технические идентификаторы и имена внешних API.',
-        'Опирайся на проверенные практики: маленькие проверяемые шаги, обработка ошибок и граничных случаев, отсутствие секретов в репозитории, автоматические проверки до отчёта о готовности.',
-        'Отчитывайся по факту: что проверено и какими командами, что осталось непроверенным и какие риски сохраняются; непроверенный результат не называй готовым.',
+        'Весь проект веди на русском: документация, тексты интерфейса, комментарии, сообщения об ошибках, коммиты и правила. Исключения — идентификаторы кода, имена библиотек и внешних API, служебные файлы инструментов; спорный случай опиши в README.',
+        'Соблюдай инженерные конвенции: стиль и соглашения языка и фреймворка, совместимость версий, обработка ошибок и граничных случаев, никаких секретов в репозитории и логах.',
+        'Отчитывайся по факту, четырьмя строками: Проверено (что и какими командами) / Не проверено / Риски / Следующий шаг. Непроверенный результат не называй готовым.',
+        'Делай ровно запрошенное: не рефактори попутно, не добавляй зависимости, не меняй публичные контракты, формат данных и лицензию без явного согласия.',
+        'Если задача заблокирована — нет доступа, противоречивые требования, риск потери данных — остановись, опиши блокер и варианты. Не обходи ограничения и не отключай проверки ради зелёного статуса.',
       ],
-      quality: ['Полнота и точность.', 'Ясная структура и профессиональный тон.', 'Практическая применимость.'],
+      quality: [
+        'Каждое утверждение либо проверяемо, либо помечено как предположение.',
+        'Есть шаг или команда проверки результата.',
+        'Нет текста длиннее, чем нужно для ответа.',
+      ],
       headings: {
         role: 'Роль',
         task: 'Задача',
-        context: 'Контекст',
         requirements: 'Требования',
         rules: 'Правила работы',
         format: 'Формат ответа',
@@ -231,7 +238,7 @@ window.__ModuleLoader__.load({
       },
       requirements: {
         code: [
-          'Follow the conventions of the language and framework, version compatibility, and security.',
+          'Show how to verify the result: a command, a test or a scenario.',
           'Provide working code with brief explanations.',
           'List dependencies and run steps when needed.',
         ],
@@ -253,7 +260,7 @@ window.__ModuleLoader__.load({
         general: [
           'Be concrete and avoid generic filler.',
           'Provide examples and practical steps.',
-          'Do not fill gaps with guesses: ask for what is missing.',
+          'Name the next practical step: what to do next.',
         ],
       },
       format: {
@@ -263,19 +270,23 @@ window.__ModuleLoader__.load({
         question: ['1. Direct answer', '2. Explanation', '3. Example', '4. Limitations'],
         general: ['1. Brief understanding of the task', '2. Step-by-step answer', '3. Examples', '4. Next steps'],
       },
-      context: 'Answer in English. Preserve the original intent and do not add requirements the user did not ask for.',
       rules: [
-        'Keep documentation alive with the code: AGENTS.md for rules and conventions for agents, ROADMAP.md for status, priorities and next steps, README.md for installation, usage and architecture; create the file when it does not exist yet and update it in the same change.',
-        'Keep knowledge in the repository, not in the chat: record the current state, decisions and their reasons, known issues and the next step so a new session can continue without the chat history.',
-        'Never guess: when information is missing ask up to three precise questions; at a fork list the options and state a clear recommendation with reasoning.',
-        'Rely on proven practices: small verifiable steps, error and edge-case handling, no secrets in the repository, automated checks before reporting success.',
-        'Report facts: what you verified and with which commands, what remains unverified and which risks stay; never call unverified work done.',
+        'Keep documentation alive with the code: AGENTS.md for rules and conventions for agents, ROADMAP.md for status, priorities and the next step, README.md for installation, usage and architecture. Each file has its own role, so do not copy the same text into three places; create a missing file in the same change.',
+        'Keep knowledge in the repository, not in the chat: record the current state, decisions, their reasons, known issues and the next step so a new session can continue without the chat history. A decision without its reason counts as unrecorded.',
+        'Never guess: do not invent APIs, paths, versions or numbers — verify or ask. When information is missing ask up to three precise questions; at a fork list the options and recommend the best one with reasoning. Separate facts from assumptions.',
+        'Follow engineering conventions: language and framework style, version compatibility, error and edge-case handling, no secrets in the repository or logs.',
+        'Report facts in four lines: Verified (what and with which commands) / Not verified / Risks / Next step. Never call unverified work done.',
+        'Do exactly what was asked: no drive-by refactoring, no new dependencies, no changes to public contracts, data formats or the licence without explicit consent.',
+        'When blocked — no access, contradictory requirements, risk of data loss — stop and describe the blocker with options. Never bypass restrictions or disable checks to get a green status.',
       ],
-      quality: ['Completeness and accuracy.', 'Clear structure and professional tone.', 'Practical applicability.'],
+      quality: [
+        'Every statement is either verifiable or marked as an assumption.',
+        'There is a step or command that verifies the result.',
+        'No text longer than the answer actually needs.',
+      ],
       headings: {
         role: 'Role',
         task: 'Task',
-        context: 'Context',
         requirements: 'Requirements',
         rules: 'Working rules',
         format: 'Output format',
@@ -293,7 +304,7 @@ window.__ModuleLoader__.load({
       },
       requirements: {
         code: [
-          '遵循语言与框架的约定、版本兼容性和安全性。',
+          '说明如何验证结果：命令、测试或场景。',
           '提供可运行的代码，并附简要说明。',
           '如有需要，列明依赖和运行步骤。',
         ],
@@ -315,7 +326,7 @@ window.__ModuleLoader__.load({
         general: [
           '具体明确，避免空话。',
           '提供示例和可执行的步骤。',
-          '不要用猜测填补空缺：缺少什么就问。',
+          '指出下一步实际动作：接下来该做什么。',
         ],
       },
       format: {
@@ -325,19 +336,23 @@ window.__ModuleLoader__.load({
         question: ['1. 直接答案', '2. 解释', '3. 示例', '4. 局限性'],
         general: ['1. 任务简述', '2. 分步回答', '3. 示例', '4. 后续步骤'],
       },
-      context: '用中文回答。保留原始意图，不要添加用户未要求的额外要求。',
       rules: [
-        '文档与代码同步维护：AGENTS.md 记录代理的规则与约定，ROADMAP.md 记录状态、优先级和后续步骤，README.md 记录安装、使用与架构；文件尚未存在时先创建，并与代码在同一次改动中更新。',
-        '把知识留在仓库而不是对话里：记录当前状态、已做的决定及理由、已知问题和下一步，使新会话无需聊天历史即可继续工作。',
-        '不要猜测：信息不足时提出至多三个明确问题；在分叉处列出选项并给出明确推荐及理由。',
-        '遵循经过验证的实践：小而可验证的步骤、处理错误与边界情况、仓库中不放密钥、在报告完成前运行自动检查。',
-        '如实汇报：说明验证了什么、用了哪些命令、哪些尚未验证、还剩哪些风险；未经验证的结果不要称为完成。',
+        '文档与代码同步维护：AGENTS.md 记录代理的规则与约定，ROADMAP.md 记录状态、优先级和下一步，README.md 记录安装、使用与架构。每个文件各有职责，不要把同样的内容重复写在三处；文件不存在时在同一次改动中创建。',
+        '把知识留在仓库而不是对话里：记录当前状态、已做的决定及理由、已知问题和下一步，使新会话无需聊天历史即可继续工作。没有理由的决定视为未记录。',
+        '不要猜测：不要编造 API、路径、版本或数字——不确定就核实或询问。信息不足时提出至多三个明确问题；在分叉处列出选项并给出明确推荐及理由。区分事实与假设。',
+        '遵循工程约定：语言与框架的风格、版本兼容性、错误与边界情况处理，仓库和日志中不得出现密钥。',
+        '按事实汇报，共四行：已验证（内容与所用命令）/ 未验证 / 风险 / 下一步。未经验证的结果不要称为完成。',
+        '只做被要求的事：不顺手重构、不新增依赖，未经明确同意不修改公共契约、数据格式和许可证。',
+        '任务受阻时——无法访问、要求矛盾、数据丢失风险——停下来说明阻碍和可选方案。不要绕开限制，也不要为了通过状态而关闭检查。',
       ],
-      quality: ['完整与准确。', '结构清晰，语气专业。', '具备实际可操作性。'],
+      quality: [
+        '每条陈述都可验证，或已标注为假设。',
+        '有验证结果的步骤或命令。',
+        '没有超出回答需要的冗长文字。',
+      ],
       headings: {
         role: '角色',
         task: '任务',
-        context: '背景',
         requirements: '要求',
         rules: '工作规则',
         format: '回答格式',
@@ -359,9 +374,6 @@ window.__ModuleLoader__.load({
         '',
         '## ' + headings.task,
         text,
-        '',
-        '## ' + headings.context,
-        copy.context,
         '',
         '## ' + headings.requirements,
         copy.requirements[intent].map((item) => '- ' + item).join('\n'),
@@ -533,7 +545,7 @@ window.__ModuleLoader__.load({
             const fallback = buildPrompt(original);
             if (fallback) {
               applyResult(fallback, original);
-              setNotice(copy.fallback);
+              setNotice(error && error.code === 'TRUNCATED' ? copy.fallbackTruncated : copy.fallback);
             }
             if (error && (error.code === 'NO_MODEL' || error.code === 'NO_LLM')) {
               setMode('template');

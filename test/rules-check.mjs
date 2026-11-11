@@ -6,12 +6,13 @@
  *
  * Что проверяется:
  * - файлы не содержат смешанных переводов строк (портируемость чекаута);
- * - локальный шаблон содержит все разделы в нужном порядке;
- * - правило о русском языке есть только в блоке `ru`: у `en` и `zh` 5 пунктов,
- *   у `ru` — 7;
+ * - локальный шаблон содержит все разделы в нужном порядке и без «Контекста»;
+ * - правило о русском языке есть только в блоке `ru`: у `en` и `zh` 7 пунктов,
+ *   у `ru` — 9;
  * - список правил в `client.js` дословно совпадает со `STANDING_RULES` в
- *   `index.js` — иначе LLM-путь и шаблон начнут расходиться;
- * - заголовок раздела одинаков в шаблоне и в системном промпте;
+ *   `index.js`, а заголовки — с `RULES_HEADINGS`;
+ * - правила не уходят в модель: системный промпт содержит маркер, но не тексты
+ *   правил, а Host сам вставляет блок правил в ответ;
  * - определение намерения и языка работает на образцах ru / en / zh.
  *
  * Модули не импортируются напрямую: `client.js` — фабрика `__ModuleLoader__`,
@@ -48,21 +49,21 @@ const anchor = "    return {\n      inject: ['slots', 'locale'],";
 const clientForTest = clientSrc.replace(/\r\n/g, '\n');
 const injected = clientForTest.replace(
   anchor,
-  '    globalThis.__dpo = { buildPrompt, detectIntent, detectLanguage, RU, EN, ZH };\n' + anchor,
+  '    globalThis.__dpo = { buildPrompt, detectIntent, detectLanguage, RU, EN, ZH, COPY };\n' + anchor,
 );
 assert.notStrictEqual(injected, clientForTest, 'client.js: не найден якорь для проверки');
 new Function('window', injected)({ __ModuleLoader__: { load: (def) => { captured = def; } } });
 captured.factory(() => ReactStub);
-const { buildPrompt, detectIntent, detectLanguage, RU, EN, ZH } = globalThis.__dpo;
+const { buildPrompt, detectIntent, detectLanguage, RU, EN, ZH, COPY } = globalThis.__dpo;
 const TABLES = { ru: RU, en: EN, zh: ZH };
 
 // --- Host-половина: экспорт снимается, скрипт выполняется как обычный код ---
 const stripped = indexSrc
   .replace(/\bexport const /g, 'const ')
   .replace(/\bexport function /g, 'function ')
-  + '\nglobalThis.__idx = { STANDING_RULES, RULES_HEADINGS, systemPrompt };\n';
+  + '\nglobalThis.__idx = { STANDING_RULES, RULES_HEADINGS, RULES_MARKER, withWorkingRules, systemPrompt };\n';
 new Function(stripped)();
-const { STANDING_RULES, RULES_HEADINGS, systemPrompt } = globalThis.__idx;
+const { STANDING_RULES, RULES_HEADINGS, RULES_MARKER, withWorkingRules, systemPrompt } = globalThis.__idx;
 
 // --- Определение намерения и языка ------------------------------------------
 for (const [draft, expected] of [
@@ -78,13 +79,19 @@ assert.strictEqual(detectLanguage('Привет'), 'ru');
 assert.strictEqual(detectLanguage('你好'), 'zh');
 assert.strictEqual(detectLanguage('hello'), 'en');
 
+// --- Интерфейсные строки: одинаковый набор ключей во всех языках ------------
+const copyKeys = Object.keys(COPY.ru).sort();
+for (const lang of ['en', 'zh']) {
+  assert.deepStrictEqual(Object.keys(COPY[lang]).sort(), copyKeys, `COPY.${lang}: разный набор строк`);
+}
+
 // --- Локальный шаблон по каждому языку --------------------------------------
 const drafts = {
   ru: 'Напиши функцию retry на python с экспоненциальной задержкой',
   en: 'Write a retry function in python with exponential backoff',
   zh: '用 python 写一个指数退避的重试函数',
 };
-const expectedRules = { ru: 7, en: 5, zh: 5 };
+const expectedRules = { ru: 9, en: 7, zh: 7 };
 const sizes = {};
 for (const [lang, draft] of Object.entries(drafts)) {
   const out = buildPrompt(draft);
@@ -92,7 +99,7 @@ for (const [lang, draft] of Object.entries(drafts)) {
     ? `${out.length} символов`
     : `${out.replace(/\s+/g, ' ').trim().split(' ').length} слов`;
   const headings = TABLES[lang].headings;
-  const order = ['role', 'task', 'context', 'requirements', 'rules', 'format', 'quality'];
+  const order = ['role', 'task', 'requirements', 'rules', 'format', 'quality'];
   const positions = order.map((key) => out.indexOf('## ' + headings[key]));
   assert.ok(positions.every((pos) => pos >= 0), `${lang}: отсутствует раздел`);
   assert.deepStrictEqual(
@@ -100,6 +107,7 @@ for (const [lang, draft] of Object.entries(drafts)) {
     positions,
     `${lang}: нарушен порядок разделов`,
   );
+  assert.ok(!('context' in headings), `${lang}: раздел «Контекст» должен быть удалён`);
   const bullets = out
     .slice(out.indexOf('## ' + headings.rules), out.indexOf('## ' + headings.format))
     .split('\n')
@@ -128,16 +136,40 @@ for (const lang of ['en', 'zh']) {
 for (const lang of ['ru', 'en', 'zh']) {
   assert.deepStrictEqual(TABLES[lang].rules, STANDING_RULES[lang], `${lang}: правила разошлись`);
   assert.strictEqual(RULES_HEADINGS[lang], TABLES[lang].headings.rules, `${lang}: заголовки разошлись`);
-  const prompt = systemPrompt(lang);
-  for (const rule of STANDING_RULES[lang]) {
-    assert.ok(prompt.includes(rule), `systemPrompt(${lang}) потерял правило`);
-  }
-  assert.ok(prompt.includes('"' + RULES_HEADINGS[lang] + '"'), `systemPrompt(${lang}) без заголовка`);
 }
 assert.deepStrictEqual(Object.keys(TABLES).sort(), Object.keys(STANDING_RULES).sort());
 assert.deepStrictEqual(Object.keys(TABLES).sort(), Object.keys(RULES_HEADINGS).sort());
 
-console.log('ОК: шаблон, LLM-инструкция и совпадение правил проверены');
+// --- Правила не уходят в модель, а вставляются Host-ом ---------------------
+for (const lang of ['ru', 'en', 'zh']) {
+  const prompt = systemPrompt(lang);
+  assert.ok(prompt.includes(RULES_MARKER), `systemPrompt(${lang}) без маркера правил`);
+  for (const rule of STANDING_RULES[lang]) {
+    assert.ok(!prompt.includes(rule), `systemPrompt(${lang}) не должен содержать сами правила`);
+  }
+  // Маркер на месте: блок встаёт между требованиями и форматом ответа.
+  const heading = RULES_HEADINGS[lang];
+  const sample = [
+    '## Role', 'text', '',
+    '## Requirements', '- item', '',
+    RULES_MARKER, '',
+    '## Output format', '1. item',
+  ].join('\n');
+  const filled = withWorkingRules(sample, lang);
+  assert.ok(!filled.includes(RULES_MARKER), `${lang}: маркер не заменён`);
+  assert.strictEqual(filled.split('## ' + heading).length - 1, 1, `${lang}: раздел правил не один`);
+  for (const rule of STANDING_RULES[lang]) {
+    assert.ok(filled.includes('- ' + rule), `${lang}: правило не попало в результат`);
+  }
+  const before = filled.indexOf('## Output format');
+  const blockAt = filled.indexOf('## ' + heading);
+  assert.ok(blockAt >= 0 && blockAt < before, `${lang}: блок правил вставлен не перед форматом ответа`);
+  // Маркер потерян: правила всё равно попадают в результат.
+  const appended = withWorkingRules(sample.replace(RULES_MARKER + '\n', ''), lang);
+  assert.ok(appended.trimEnd().endsWith(STANDING_RULES[lang].at(-1)), `${lang}: блок не добавлен в конец`);
+}
+
+console.log('ОК: шаблон, LLM-инструкция и вставка правил проверены');
 console.log('Размер шаблона (ориентир для lengthGuide): '
   + Object.entries(sizes).map(([lang, size]) => `${lang}: ${size}`).join(', '));
 console.log('\n--- пример (ru, намерение=code) ---\n' + buildPrompt(drafts.ru));
